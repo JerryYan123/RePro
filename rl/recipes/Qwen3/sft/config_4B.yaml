@@ -1,0 +1,44 @@
+# Model arguments
+model_name_or_path: Qwen/Qwen3-4B
+model_revision: main
+torch_dtype: bfloat16
+attn_implementation: flash_attention_2
+
+# Data training arguments
+dataset_name: dclm_rephrased_4o
+
+# SFT trainer config
+bf16: true
+do_eval: true
+eval_strategy: steps
+eval_steps: 50
+gradient_accumulation_steps: 2
+gradient_checkpointing: true
+gradient_checkpointing_kwargs:
+  use_reentrant: false
+hub_model_id: synthetic_data_generator
+hub_strategy: every_save
+learning_rate: 5.0e-5
+log_level: info
+logging_first_step: true
+logging_steps: 1
+logging_strategy: steps
+lr_scheduler_type: cosine_with_min_lr
+lr_scheduler_kwargs:
+  min_lr_rate: 0.1
+packing: false
+max_grad_norm: 0.2
+max_length: 8192
+max_steps: -1
+num_train_epochs: 1
+output_dir: /tmp/synthetic_data_generator_Qwen3-4B_sft
+overwrite_output_dir: true
+per_device_eval_batch_size: 4
+per_device_train_batch_size: 4
+push_to_hub: false
+report_to:
+- wandb
+save_strategy: epoch
+save_total_limit: 1
+seed: 42
+warmup_ratio: 0.03

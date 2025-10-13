@@ -1,5 +1,7 @@
 # RePro: Training Language Models to Faithfully Recycle the Web for Pretraining
 
+<p align="center"><a href='https://huggingface.co/cx-cmu/repro-rephraser-4B'><img src='https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Rephraser-blue'></p>
+
 ## Quick Links
 
 - [Prerequisites](#prerequisites)

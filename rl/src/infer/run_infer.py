@@ -143,7 +143,12 @@ def main():
             cur_text = " ".join(texts)
             if cur_text == "":
                 cnt += 1
-            f.write(json.dumps({"text": cur_text}) + "\n")
+            # Remove leading and trailing "---"
+            if cur_text[:3] == "---":
+                cur_text = cur_text[3:]
+            if cur_text[-3:] == "---":
+                cur_text = cur_text[:-3]
+            f.write(json.dumps({"text": cur_text.strip()}) + "\n")
             print(f"Total {len(transformed_texts)} items, {cnt} invalid items found.")
 
 

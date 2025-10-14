@@ -1,6 +1,8 @@
 # RePro: Training Language Models to Faithfully Recycle the Web for Pretraining
 
-<p align="center"><a href='https://huggingface.co/cx-cmu/repro-rephraser-4B'><img src='https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Rephraser-blue'></p>
+<p align="center"><a href='https://arxiv.org/abs/2510.10681'><img src='https://img.shields.io/badge/Paper-Arxiv-red'></a> <a href='https://huggingface.co/cx-cmu/repro-rephraser-4B'><img src='https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Rephraser-blue'></p>
+
+Recycled data coming soon...
 
 ## Quick Links
 
@@ -33,7 +35,7 @@ python setup.py install
 
 Run `scripts/rl.sh`.
 
-- We only provide a 1000-example subset of the training data (`rl/1000_sample_low_score.jsonl`) due to the size limit.
+- We provide a 1000-example subset of the training data (`rl/1000_sample_low_score.jsonl`) for testing purposes.
 
 ## Rephraser Inference
 

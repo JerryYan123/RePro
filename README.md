@@ -35,7 +35,7 @@ python setup.py install
 
 Run `scripts/rl.sh`.
 
-- We provide a 1000-example subset of the training data (`rl/1000_sample_low_score.jsonl`) for testing purposes.
+- We provide a 1000-example subset of the training data (`rl/1000_sample_low_score.jsonl`) for testing purposes. The full dataset can be found [here](https://huggingface.co/datasets/cx-cmu/repro-rl-data).
 
 ## Rephraser Inference
 

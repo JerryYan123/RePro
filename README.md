@@ -4,11 +4,9 @@
 
 Recycled data coming soon...
 
-<br>
 <p align="center">
 <img src="assets/RePro.png" width="600">
 </p>
-<br>
 
 ## Quick Links
 

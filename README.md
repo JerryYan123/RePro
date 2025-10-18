@@ -4,11 +4,11 @@
 
 Recycled data coming soon...
 
+<br>
 <p align="center">
-  <object data="assets/RePro.pdf" type="application/pdf" width="600" height="400">
-    <embed src="assets/RePro.pdf" width="600" height="400" />
-  </object>
+<img src="assets/RePro.png" width="600">
 </p>
+<br>
 
 ## Quick Links
 

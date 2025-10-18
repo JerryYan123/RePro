@@ -13,6 +13,7 @@ Recycled data coming soon...
 - [Tokenization](#tokenization)
 - [Pretraining](#pretraining)
 - [Evaluation](#evaluation)
+- [Citation](#citation)
 
 Our RL code is based on Open R1, and our pretraining code is based on DCLM. Please refer to their repos for more details.
 
@@ -79,3 +80,16 @@ Run `scripts/eval.sh`:
 - `checkpoint`: the specific epoch you want to evaluate
 - `model`: model scale config in `training/open_lm_configs`
 - `output-file`: where to store the evaluation result
+
+## Citation
+
+If you find this work useful, please consider citing:
+
+```
+@article{yu2025repro,
+  title={{RePro}: Training Language Models to Faithfully Recycle the Web for Pretraining},
+  author={Yu, Zichun and Xiong, Chenyan},
+  journal={ArXiv preprint},
+  year={2025}
+}
+```

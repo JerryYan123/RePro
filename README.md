@@ -4,6 +4,12 @@
 
 Recycled data coming soon...
 
+<p align="center">
+  <object data="assets/RePro.pdf" type="application/pdf" width="600" height="400">
+    <embed src="assets/RePro.pdf" width="600" height="400" />
+  </object>
+</p>
+
 ## Quick Links
 
 - [Prerequisites](#prerequisites)

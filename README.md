@@ -1,6 +1,6 @@
 # RePro: Training Language Models to Faithfully Recycle the Web for Pretraining
 
-<p align="center"><a href='https://arxiv.org/abs/2510.10681'><img src='https://img.shields.io/badge/Arxiv-Paper-red'></a> <a href='https://huggingface.co/cx-cmu/repro-rephraser-4B'><img src='https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Rephraser_%28Based_on_Qwen3--4B%29-blue'></a></p> <a href='https://huggingface.co/cx-cmu/repro-rephraser-1B'><img src='https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Rephraser_%28Based_on_OLMo2--1B%29-blue'></a></p>
+<p align="center"><a href='https://arxiv.org/abs/2510.10681'><img src='https://img.shields.io/badge/Arxiv-Paper-red'></a> <a href='https://huggingface.co/cx-cmu/repro-rephraser-4B'><img src='https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Rephraser_%28Based_on_Qwen3--4B%29-blue'></a> <a href='https://huggingface.co/cx-cmu/repro-rephraser-1B'><img src='https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Rephraser_%28Based_on_OLMo2--1B%29-blue'></a></p>
 
 Recycled data coming soon...
 

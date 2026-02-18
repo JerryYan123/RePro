@@ -5,8 +5,8 @@ from cloudpathlib import S3Path
 import zstandard as zstd
 from tqdm import tqdm
 import datasets
+import argparse
 import json
-import sys
 import re
 
 recycle_prompt = """Your task is to read and paraphrase the provided text following these instructions:
@@ -57,7 +57,12 @@ def load_jsonl_zst(file_path):
                     yield json.loads(line)
 
 
-def make_conversation(example, prompt_column: str = "text"):
+def make_conversation(
+    example,
+    prompt_column: str = "text",
+    tokenizer=None,
+    max_prompt_tokens=4096,
+):
     prompt = []
     prompt.append(
         {
@@ -65,10 +70,34 @@ def make_conversation(example, prompt_column: str = "text"):
             "content": "A chat between a curious user and an artificial intelligence assistant. The assistant gives helpful, detailed, and polite answers to the questions. /no_think",
         }
     )
+
+    text_content = example[prompt_column]
+
+    # If tokenizer is provided, truncate based on token count
+    if tokenizer is not None:
+        # First, get the base prompt tokens (without the text)
+        base_prompt = recycle_prompt.replace("{TEXT}", "")
+        base_tokens = tokenizer.encode(base_prompt)
+        system_tokens = tokenizer.encode("A chat between a curious user and an artificial intelligence assistant. The assistant gives helpful, detailed, and polite answers to the questions. /no_think")
+
+        # Calculate available tokens for the text content
+        available_tokens = (
+            max_prompt_tokens - len(base_tokens) - len(system_tokens) - 50
+        )  # 50 token safety margin
+
+        # Tokenize and truncate the text content
+        text_tokens = tokenizer.encode(text_content)
+        if len(text_tokens) > available_tokens:
+            text_content = (
+                tokenizer.decode(text_tokens[: available_tokens // 2])
+                + "... "
+                + tokenizer.decode(text_tokens[-(available_tokens // 2) :])
+            )
+
     prompt.append(
         {
             "role": "user",
-            "content": recycle_prompt.format(TEXT=example[prompt_column]),
+            "content": recycle_prompt.format(TEXT=text_content),
         }
     )
     return {"prompt": prompt}
@@ -101,12 +130,20 @@ def vllm_inference(llm, dataset):
 
 
 def main():
-    rank = int(sys.argv[1])
+    parser = argparse.ArgumentParser()
+    parser.add_argument("rank", type=int)
+    parser.add_argument("--model", type=str, required=True)
+    parser.add_argument("--write_template", type=str, required=True)
+    args = parser.parse_args()
+
+    rank = args.rank
     print(f"Received argument: {rank}")
 
-    llm = LLM(model="/tmp/synthetic_data_generator_Qwen3-4B_grpo/checkpoint-1980")
+    llm = LLM(model=args.model)
+
+    tokenizer = llm.get_tokenizer() if "OLMo2-1B" in args.model else None
     read_template = "s3://commoncrawl/contrib/datacomp/DCLM-refinedweb/global-shard_01_of_10/local-shard_0_of_10/shard_{}_processed.jsonl.zstd"
-    write_template = ("data/refinedweb_01_0/Qwen3-4B-grpo-1980/textfiles/shard_{}_processed.jsonl")
+    write_template = args.write_template
     for i in tqdm(range(rank, rank + 1), desc="Processing shards..."):
         write_file_name = write_template.format(str(i).zfill(8))
         if gstore.blob(write_file_name).exists():
@@ -123,7 +160,9 @@ def main():
                 data_list.append({"text": text[j : j + 7000]})
                 tids.append(tid)
             tid += 1
-        dataset = datasets.Dataset.from_list(data_list).map(make_conversation)
+        dataset = datasets.Dataset.from_list(data_list).map(
+            lambda x: make_conversation(x, tokenizer=tokenizer)
+        )
         transformed_texts = vllm_inference(llm, dataset)
         with gstore.blob(write_file_name).open("w") as f:
             print(f"Writing to file: {write_file_name}")

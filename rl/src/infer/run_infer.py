@@ -78,7 +78,7 @@ def make_conversation(
         # First, get the base prompt tokens (without the text)
         base_prompt = recycle_prompt.replace("{TEXT}", "")
         base_tokens = tokenizer.encode(base_prompt)
-        system_tokens = tokenizer.encode("A chat between a curious user and an artificial intelligence assistant. The assistant gives helpful, detailed, and polite answers to the questions. /no_think")
+        system_tokens = tokenizer.encode("A chat between a curious user and an artificial intelligence assistant. The assistant gives helpful, detailed, and polite answers to the questions.")
 
         # Calculate available tokens for the text content
         available_tokens = (

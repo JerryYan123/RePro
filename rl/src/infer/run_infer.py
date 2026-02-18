@@ -64,10 +64,13 @@ def make_conversation(
     max_prompt_tokens=4096,
 ):
     prompt = []
+    system_prompt = "A chat between a curious user and an artificial intelligence assistant. The assistant gives helpful, detailed, and polite answers to the questions."
+    if max_prompt_tokens == 8192:
+        system_prompt += " /no_think"
     prompt.append(
         {
             "role": "system",
-            "content": "A chat between a curious user and an artificial intelligence assistant. The assistant gives helpful, detailed, and polite answers to the questions. /no_think",
+            "content": system_prompt,
         }
     )
 
@@ -78,7 +81,7 @@ def make_conversation(
         # First, get the base prompt tokens (without the text)
         base_prompt = recycle_prompt.replace("{TEXT}", "")
         base_tokens = tokenizer.encode(base_prompt)
-        system_tokens = tokenizer.encode("A chat between a curious user and an artificial intelligence assistant. The assistant gives helpful, detailed, and polite answers to the questions.")
+        system_tokens = tokenizer.encode(system_prompt)
 
         # Calculate available tokens for the text content
         available_tokens = (
@@ -141,7 +144,7 @@ def main():
 
     llm = LLM(model=args.model)
 
-    tokenizer = llm.get_tokenizer() if "OLMo2-1B" in args.model else None
+    tokenizer = llm.get_tokenizer()
     read_template = "s3://commoncrawl/contrib/datacomp/DCLM-refinedweb/global-shard_01_of_10/local-shard_0_of_10/shard_{}_processed.jsonl.zstd"
     write_template = args.write_template
     for i in tqdm(range(rank, rank + 1), desc="Processing shards..."):
@@ -160,8 +163,12 @@ def main():
                 data_list.append({"text": text[j : j + 7000]})
                 tids.append(tid)
             tid += 1
+        if "Qwen" in args.model:
+            max_prompt_tokens = 8192
+        else:
+            max_prompt_tokens = 4096
         dataset = datasets.Dataset.from_list(data_list).map(
-            lambda x: make_conversation(x, tokenizer=tokenizer)
+            lambda x: make_conversation(x, tokenizer=tokenizer, max_prompt_tokens=max_prompt_tokens)
         )
         transformed_texts = vllm_inference(llm, dataset)
         with gstore.blob(write_file_name).open("w") as f:

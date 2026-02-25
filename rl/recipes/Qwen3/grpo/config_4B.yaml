@@ -38,7 +38,7 @@ max_completion_length: 2048
 max_steps: 2000
 num_generations: 8 # must be divisible by per_device_train_batch_size x number_of_gpus, see https://github.com/huggingface/trl/pull/2776#issue-2833772774
 num_train_epochs: 20
-output_dir: /tmp/synthetic_data_generator_Qwen3-4B_grpo
+output_dir: /data/user_data/jerryy2/repro_checkpoints/Qwen3-4B_grpo
 overwrite_output_dir: true
 per_device_eval_batch_size: 16
 per_device_train_batch_size: 8

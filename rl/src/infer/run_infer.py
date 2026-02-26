@@ -1,12 +1,11 @@
 from vllm import LLM, TokensPrompt, SamplingParams
 from pathlib import Path as LocalPath
-from google.cloud import storage
-from cloudpathlib import S3Path
 import zstandard as zstd
 from tqdm import tqdm
 import datasets
 import argparse
 import json
+import os
 import re
 
 recycle_prompt = """Your task is to read and paraphrase the provided text following these instructions:
@@ -33,7 +32,6 @@ Task:
 After thoroughly reading the above text, paraphrase it in high-quality and clear English following the instructions.
 Start your response immediately with "Here is a paraphrased version:" and then provide the paraphrased text."""
 
-gstore = storage.Client().bucket("")
 sampling_params = SamplingParams(
     temperature=1.0,
     top_p=0.9,
@@ -43,18 +41,22 @@ sampling_params = SamplingParams(
 
 def load_jsonl_zst(file_path):
     """Load data from a compressed JSONL file and yield examples"""
-    if file_path.startswith("s3://"):
-        path = S3Path(file_path)
-    else:
-        path = LocalPath(file_path)
-
-    with path.open("rb") as f:
+    with open(file_path, "rb") as f:
         dctx = zstd.ZstdDecompressor()
         with dctx.stream_reader(f) as reader:
             text_stream = reader.read().decode("utf-8")
             for line in text_stream.strip().split("\n"):
                 if line:
                     yield json.loads(line)
+
+
+def load_jsonl(file_path):
+    """Load data from an uncompressed JSONL file and yield examples"""
+    with open(file_path, "r") as f:
+        for line in f:
+            line = line.strip()
+            if line:
+                yield json.loads(line)
 
 
 def make_conversation(
@@ -136,66 +138,85 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("rank", type=int)
     parser.add_argument("--model", type=str, required=True)
-    parser.add_argument("--write_template", type=str, required=True)
+    parser.add_argument("--read_dir", type=str, required=True,
+                        help="Directory containing input .jsonl.zstd or .jsonl shard files")
+    parser.add_argument("--write_dir", type=str, required=True,
+                        help="Directory to write output .jsonl files")
     args = parser.parse_args()
 
     rank = args.rank
     print(f"Received argument: {rank}")
 
     llm = LLM(model=args.model)
-
     tokenizer = llm.get_tokenizer()
-    read_template = "s3://commoncrawl/contrib/datacomp/DCLM-refinedweb/global-shard_01_of_10/local-shard_0_of_10/shard_{}_processed.jsonl.zstd"
-    write_template = args.write_template
-    for i in tqdm(range(rank, rank + 1), desc="Processing shards..."):
-        write_file_name = write_template.format(str(i).zfill(8))
-        if gstore.blob(write_file_name).exists():
-            print(f"{write_file_name} already exists!")
-            continue
-        read_file_name = read_template.format(str(i).zfill(8))
-        print(f"Processing file: {read_file_name}")
-        data_list = []
-        tids = []
-        tid = 0
-        for item in load_jsonl_zst(read_file_name):
-            text = item["text"]
-            for j in range(0, len(text), 7000):
-                data_list.append({"text": text[j : j + 7000]})
-                tids.append(tid)
-            tid += 1
-        if "Qwen" in args.model:
-            max_prompt_tokens = 8192
-        else:
-            max_prompt_tokens = 4096
-        dataset = datasets.Dataset.from_list(data_list).map(
-            lambda x: make_conversation(x, tokenizer=tokenizer, max_prompt_tokens=max_prompt_tokens)
-        )
-        transformed_texts = vllm_inference(llm, dataset)
-        with gstore.blob(write_file_name).open("w") as f:
-            print(f"Writing to file: {write_file_name}")
-            prev_tid = 0
-            texts = []
-            cnt = 0
-            for tid, text in zip(tids, transformed_texts):
-                if tid == prev_tid:
-                    texts.append(text)
-                else:
-                    cur_text = " ".join(texts)
-                    if cur_text == "":
-                        cnt += 1
-                    f.write(json.dumps({"text": cur_text}) + "\n")
-                    prev_tid = tid
-                    texts = [text]
-            cur_text = " ".join(texts)
-            if cur_text == "":
-                cnt += 1
-            # Remove leading and trailing "---"
-            if cur_text[:3] == "---":
-                cur_text = cur_text[3:]
-            if cur_text[-3:] == "---":
-                cur_text = cur_text[:-3]
-            f.write(json.dumps({"text": cur_text.strip()}) + "\n")
-            print(f"Total {len(transformed_texts)} items, {cnt} invalid items found.")
+
+    os.makedirs(args.write_dir, exist_ok=True)
+
+    shard_id = str(rank).zfill(8)
+    write_file_name = os.path.join(args.write_dir, f"shard_{shard_id}_processed.jsonl")
+
+    if os.path.exists(write_file_name):
+        print(f"{write_file_name} already exists, skipping.")
+        return
+
+    read_file_zst = os.path.join(args.read_dir, f"shard_{shard_id}_processed.jsonl.zstd")
+    read_file_jsonl = os.path.join(args.read_dir, f"shard_{shard_id}_processed.jsonl")
+
+    if os.path.exists(read_file_zst):
+        read_file_name = read_file_zst
+        loader = load_jsonl_zst
+    elif os.path.exists(read_file_jsonl):
+        read_file_name = read_file_jsonl
+        loader = load_jsonl
+    else:
+        print(f"No input file found for shard {shard_id} in {args.read_dir}")
+        return
+
+    print(f"Processing file: {read_file_name}")
+    data_list = []
+    tids = []
+    tid = 0
+    for item in loader(read_file_name):
+        text = item["text"]
+        for j in range(0, len(text), 7000):
+            data_list.append({"text": text[j : j + 7000]})
+            tids.append(tid)
+        tid += 1
+
+    if "Qwen" in args.model:
+        max_prompt_tokens = 8192
+    else:
+        max_prompt_tokens = 4096
+
+    dataset = datasets.Dataset.from_list(data_list).map(
+        lambda x: make_conversation(x, tokenizer=tokenizer, max_prompt_tokens=max_prompt_tokens)
+    )
+    transformed_texts = vllm_inference(llm, dataset)
+
+    with open(write_file_name, "w") as f:
+        print(f"Writing to file: {write_file_name}")
+        prev_tid = 0
+        texts = []
+        cnt = 0
+        for tid, text in zip(tids, transformed_texts):
+            if tid == prev_tid:
+                texts.append(text)
+            else:
+                cur_text = " ".join(texts)
+                if cur_text == "":
+                    cnt += 1
+                f.write(json.dumps({"text": cur_text}) + "\n")
+                prev_tid = tid
+                texts = [text]
+        cur_text = " ".join(texts)
+        if cur_text == "":
+            cnt += 1
+        if cur_text[:3] == "---":
+            cur_text = cur_text[3:]
+        if cur_text[-3:] == "---":
+            cur_text = cur_text[:-3]
+        f.write(json.dumps({"text": cur_text.strip()}) + "\n")
+        print(f"Total {len(transformed_texts)} items, {cnt} invalid items found.")
 
 
 if __name__ == "__main__":

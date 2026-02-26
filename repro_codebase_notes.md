@@ -12,14 +12,14 @@ cd ~/Desktop/00research-2026/directed_research/RePro
 git add -A && git commit -m "msg" && git push origin main
 
 # 2. BABEL: pull and submit (from login node, no interactive node needed)
-ssh jerryy2@babel.umd.edu
+ssh jerryy2@login.babel.cs.cmu.edu
 cd ~/RePro && git pull origin main
-mkdir -p /data/user_data/jerryy2/logs
+mkdir -p ~/repro_logs
 sbatch ~/RePro/scripts/babel_rl_train.sh
 
 # 3. Monitor
 squeue -u jerryy2                                           # job status
-tail -f /data/user_data/jerryy2/logs/repro-rl-<JOBID>.out   # training log
+tail -f ~/repro_logs/repro-rl-<JOBID>.out                   # training log
 ```
 
 First time on Babel: `cd ~ && git clone https://github.com/JerryYan123/RePro.git`
@@ -34,7 +34,7 @@ First time on Babel: `cd ~ && git clone https://github.com/JerryYan123/RePro.git
 | Conda env | `repro` (Python 3.11) |
 | Model cache | `/data/user_data/jerryy2/.cache/huggingface` |
 | Checkpoints | `/data/user_data/jerryy2/repro_checkpoints/` |
-| Logs | `/data/user_data/jerryy2/logs/` |
+| Logs (Slurm) | `~/repro_logs/` (home, accessible everywhere) |
 
 ## GPU Selection (2025-02-25)
 
@@ -69,12 +69,14 @@ Launches DataMan vLLM (GPU 0, port 8000) + Structure vLLM (GPU 1, port 8001), th
 
 ### Step 2: Infer (sbatch, 8 GPUs)
 
+Before running: download DCLM-RefinedWeb shards to `/data/user_data/jerryy2/repro_data/dclm_refinedweb/`.
+
 ```bash
-sbatch ~/RePro/scripts/babel_infer.sh                        # default: checkpoint-1980, shards 0-7
-sbatch ~/RePro/scripts/babel_infer.sh checkpoint-1200 0 15   # custom checkpoint + shard range
+sbatch ~/RePro/scripts/babel_infer.sh                                    # default: checkpoint-1980, shards 0-7
+sbatch ~/RePro/scripts/babel_infer.sh checkpoint-1200 /path/to/input 0 15  # custom
 ```
 
-**TODO**: `run_infer.py` uses S3/GCS — needs local filesystem modification for Babel.
+Input files should be named `shard_00000000_processed.jsonl.zstd` (or `.jsonl`). Output goes to `/data/user_data/jerryy2/repro_output/infer/`.
 
 ### Step 3: Filter (interactive, optional)
 

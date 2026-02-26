@@ -2,11 +2,11 @@
 #SBATCH --job-name=repro-rl
 #SBATCH --partition=general
 #SBATCH --qos=normal
-#SBATCH --gres=gpu:A100_80GB:8
+#SBATCH --gres=gpu:L40S:8
 #SBATCH --cpus-per-task=64
 #SBATCH --time=2-00:00:00
-#SBATCH --output=/data/user_data/jerryy2/logs/repro-rl-%j.out
-#SBATCH --error=/data/user_data/jerryy2/logs/repro-rl-%j.err
+#SBATCH --output=/home/jerryy2/repro_logs/repro-rl-%j.out
+#SBATCH --error=/home/jerryy2/repro_logs/repro-rl-%j.err
 
 source ~/.bashrc
 conda activate repro
@@ -17,7 +17,6 @@ cd /home/jerryy2/RePro/rl
 
 OUTPUT_DIR=/data/user_data/jerryy2/repro_checkpoints/Qwen3-4B_grpo
 mkdir -p $OUTPUT_DIR
-mkdir -p /data/user_data/jerryy2/logs
 mkdir -p logs
 
 echo "[$(date)] Starting DataMan server on GPU 0..."

@@ -2,11 +2,11 @@
 #SBATCH --job-name=repro-pretrain
 #SBATCH --partition=general
 #SBATCH --qos=normal
-#SBATCH --gres=gpu:A100_80GB:8
+#SBATCH --gres=gpu:L40S:8
 #SBATCH --cpus-per-task=64
-#SBATCH --time=3-00:00:00
-#SBATCH --output=/data/user_data/jerryy2/logs/repro-pretrain-%j.out
-#SBATCH --error=/data/user_data/jerryy2/logs/repro-pretrain-%j.err
+#SBATCH --time=2-00:00:00
+#SBATCH --output=/home/jerryy2/repro_logs/repro-pretrain-%j.out
+#SBATCH --error=/home/jerryy2/repro_logs/repro-pretrain-%j.err
 
 source ~/.bashrc
 conda activate repro
@@ -18,7 +18,6 @@ cd /home/jerryy2/RePro/pretrain
 LOG_DIR=/data/user_data/jerryy2/repro_output/pretrain_logs
 DATA_CONFIG=${1:-"exp_data/datasets/tokenized/baseline_01_0_fasttext_repro.json"}
 mkdir -p $LOG_DIR
-mkdir -p /data/user_data/jerryy2/logs
 
 echo "[$(date)] Starting pretraining..."
 echo "[$(date)] Data config: $DATA_CONFIG"

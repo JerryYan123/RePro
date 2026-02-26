@@ -14,6 +14,8 @@ system_prompt: "A chat between a curious user and an artificial intelligence ass
 bf16: true
 use_vllm: true
 vllm_mode: colocate
+vllm_gpu_memory_utilization: 0.99
+vllm_max_model_len: 2048
 do_eval: true
 eval_strategy: steps
 eval_steps: 30

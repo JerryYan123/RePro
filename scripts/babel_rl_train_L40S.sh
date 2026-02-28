@@ -2,22 +2,16 @@
 #SBATCH --job-name=repro-rl
 #SBATCH --partition=general
 #SBATCH --qos=normal
-#SBATCH --gres=gpu:A100_80GB:8
+#SBATCH --gres=gpu:L40S:8
 #SBATCH --cpus-per-task=64
-#SBATCH --time=2-00:00:00
+#SBATCH --time=1-00:00:00
 #SBATCH --output=/home/jerryy2/repro_logs/repro-rl-%j.out
 #SBATCH --error=/home/jerryy2/repro_logs/repro-rl-%j.err
 
 source ~/.bashrc
 conda activate repro
-export HF_HOME=/data/hf_cache
-export TRANSFORMERS_CACHE=/data/hf_cache
-export HF_DATASETS_CACHE=/data/hf_cache/datasets
-export TMPDIR=/scratch/${SLURM_JOB_ID}
-export VLLM_CACHE_ROOT=$TMPDIR/vllm
-export TRITON_CACHE_DIR=$TMPDIR/triton
-mkdir -p "$TMPDIR" "$VLLM_CACHE_ROOT" "$TRITON_CACHE_DIR"
-trap 'rm -rf "$TMPDIR"' EXIT
+export HF_HOME=/data/user_data/jerryy2/.cache/huggingface
+export TRANSFORMERS_CACHE=$HF_HOME
 
 cd /home/jerryy2/RePro/rl
 
@@ -51,9 +45,9 @@ done
 
 echo "[$(date)] Starting GRPO training..."
 CUDA_VISIBLE_DEVICES=2,3,4,5,6,7 PYTHONPATH=$PWD/src ACCELERATE_LOG_LEVEL=info \
-    accelerate launch --config_file recipes/accelerate_configs/zero3.yaml \
+    accelerate launch --config_file recipes/accelerate_configs/zero3_l40s.yaml \
     src/open_r1/grpo_synthetic.py \
-    --config recipes/Qwen3/grpo/config_4B.yaml
+    --config recipes/Qwen3/grpo/config_4B_l40s.yaml
 
 echo "[$(date)] Training complete!"
 kill $DATAMAN_PID $STRUCTURE_PID 2>/dev/null

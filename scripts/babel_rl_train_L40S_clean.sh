@@ -1,8 +1,8 @@
 #!/bin/bash
-#SBATCH --job-name=repro-rl
+#SBATCH --job-name=repro-rl-l40s
 #SBATCH --partition=general
 #SBATCH --qos=normal
-#SBATCH --gres=gpu:A100_80GB:8
+#SBATCH --gres=gpu:L40S:8
 #SBATCH --cpus-per-task=64
 #SBATCH --time=2-00:00:00
 #SBATCH --output=/home/jerryy2/repro_logs/repro-rl-%j.out
@@ -51,9 +51,9 @@ done
 
 echo "[$(date)] Starting GRPO training..."
 CUDA_VISIBLE_DEVICES=2,3,4,5,6,7 PYTHONPATH=$PWD/src ACCELERATE_LOG_LEVEL=info \
-    accelerate launch --config_file recipes/accelerate_configs/zero3.yaml \
+    accelerate launch --config_file recipes/accelerate_configs/zero3_l40s_clean.yaml \
     src/open_r1/grpo_synthetic.py \
-    --config recipes/Qwen3/grpo/config_4B.yaml
+    --config recipes/Qwen3/grpo/config_4B_l40s_clean.yaml
 
 echo "[$(date)] Training complete!"
 kill $DATAMAN_PID $STRUCTURE_PID 2>/dev/null

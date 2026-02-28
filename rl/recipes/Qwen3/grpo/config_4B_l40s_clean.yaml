@@ -14,12 +14,12 @@ system_prompt: "A chat between a curious user and an artificial intelligence ass
 bf16: true
 use_vllm: true
 vllm_mode: colocate
-vllm_gpu_memory_utilization: 0.90
+vllm_gpu_memory_utilization: 0.85
 vllm_max_model_len: 2048
 do_eval: true
 eval_strategy: steps
 eval_steps: 30
-gradient_accumulation_steps: 4
+gradient_accumulation_steps: 8
 gradient_checkpointing: true
 gradient_checkpointing_kwargs:
   use_reentrant: false
@@ -43,7 +43,7 @@ num_train_epochs: 20
 output_dir: /data/user_data/jerryy2/repro_checkpoints/Qwen3-4B_grpo
 overwrite_output_dir: true
 per_device_eval_batch_size: 16
-per_device_train_batch_size: 8
+per_device_train_batch_size: 4
 push_to_hub: false
 report_to:
 - wandb

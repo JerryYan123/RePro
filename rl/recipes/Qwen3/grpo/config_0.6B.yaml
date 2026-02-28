@@ -1,20 +1,14 @@
-# Model arguments
-model_name_or_path: Qwen/Qwen3-4B
-# model_name_or_path: /tmp/synthetic_data_generator_Qwen3-4B_sft --- SFT Init ---
+model_name_or_path: Qwen/Qwen3-0.6B
 model_revision: main
 torch_dtype: bfloat16
 attn_implementation: flash_attention_2
-
-# Data training arguments
 dataset_name: dclm
 dataset_prompt_column: text
 system_prompt: "A chat between a curious user and an artificial intelligence assistant. The assistant gives helpful, detailed, and polite answers to the questions. /no_think"
-
-# GRPO trainer config
 bf16: true
 use_vllm: true
 vllm_mode: colocate
-vllm_gpu_memory_utilization: 0.90
+vllm_gpu_memory_utilization: 0.9
 vllm_max_model_len: 2048
 do_eval: true
 eval_strategy: steps
@@ -38,9 +32,9 @@ lr_scheduler_kwargs:
 max_prompt_length: 2048
 max_completion_length: 2048
 max_steps: 2000
-num_generations: 8 # must be divisible by per_device_train_batch_size x number_of_gpus, see https://github.com/huggingface/trl/pull/2776#issue-2833772774
+num_generations: 8
 num_train_epochs: 20
-output_dir: /data/user_data/jerryy2/repro_checkpoints/Qwen3-4B_grpo
+output_dir: /data/user_data/jerryy2/repro_checkpoints/Qwen3-0.6B_grpo
 overwrite_output_dir: true
 per_device_eval_batch_size: 16
 per_device_train_batch_size: 8

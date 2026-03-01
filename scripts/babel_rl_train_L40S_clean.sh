@@ -10,9 +10,13 @@
 
 source ~/.bashrc
 conda activate repro
-export HF_HOME=/data/hf_cache
-export TRANSFORMERS_CACHE=/data/hf_cache
-export HF_DATASETS_CACHE=/data/hf_cache/datasets
+
+export HF_HOME=/data/user_data/jerryy2/hf_cache
+export HF_HUB_CACHE=/data/user_data/jerryy2/hf_cache/hub
+export TRANSFORMERS_CACHE=/data/user_data/jerryy2/hf_cache
+export HF_DATASETS_CACHE=/data/user_data/jerryy2/hf_cache/datasets
+mkdir -p "$HF_HUB_CACHE" "$HF_DATASETS_CACHE"
+
 export TMPDIR=/scratch/${SLURM_JOB_ID}
 export VLLM_CACHE_ROOT=$TMPDIR/vllm
 export TRITON_CACHE_DIR=$TMPDIR/triton

@@ -10,17 +10,21 @@
 
 set -euo pipefail
 mkdir -p ~/repro_logs
-export HF_HOME=/data/hf_cache
-export TRANSFORMERS_CACHE=/data/hf_cache
-export HF_DATASETS_CACHE=/data/hf_cache/datasets
+
+source ~/miniconda3/etc/profile.d/conda.sh
+conda activate repro
+
+export HF_HOME=/data/user_data/jerryy2/hf_cache
+export HF_HUB_CACHE=/data/user_data/jerryy2/hf_cache/hub
+export TRANSFORMERS_CACHE=/data/user_data/jerryy2/hf_cache
+export HF_DATASETS_CACHE=/data/user_data/jerryy2/hf_cache/datasets
+mkdir -p "$HF_HUB_CACHE" "$HF_DATASETS_CACHE"
+
 export TMPDIR=/scratch/${SLURM_JOB_ID}
 export VLLM_CACHE_ROOT=$TMPDIR/vllm
 export TRITON_CACHE_DIR=$TMPDIR/triton
 mkdir -p "$TMPDIR" "$VLLM_CACHE_ROOT" "$TRITON_CACHE_DIR"
 trap 'rm -rf "$TMPDIR"' EXIT
-
-source ~/miniconda3/etc/profile.d/conda.sh
-conda activate repro
 cd ~/RePro/rl
 
 DATAMAN_PORT=8000

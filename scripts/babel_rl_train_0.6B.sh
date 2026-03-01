@@ -15,6 +15,7 @@ mkdir -p ~/repro_logs
 
 source ~/miniconda3/etc/profile.d/conda.sh
 conda activate repro
+export WANDB_API_KEY=$(cat ~/.wandb_key)
 
 export HF_HOME=/data/user_data/jerryy2/hf_cache
 export HF_HUB_CACHE=/data/user_data/jerryy2/hf_cache/hub
@@ -35,7 +36,7 @@ STRUCTURE_PORT=38001
 
 echo "[$(date)] Starting DataMan server on GPU 0..."
 CUDA_VISIBLE_DEVICES=0 python -m vllm.entrypoints.openai.api_server \
-    --model RuPeng/DataMan-1.5B-EN --port $DATAMAN_PORT --max-model-len 2048 &
+    --model RuPeng/DataMan-1.5B-EN --port $DATAMAN_PORT --max-model-len 4096 &
 DATAMAN_PID=$!
 
 echo "[$(date)] Starting Structure server on GPU 1..."

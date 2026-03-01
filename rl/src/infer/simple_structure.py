@@ -84,7 +84,7 @@ class StructureInference:
         temperature=0.0,
         seed=1024,
         use_server=True,
-        server_url="http://localhost:8001/v1",
+        server_url="http://localhost:38001/v1",
         api_key="EMPTY",
     ):
         """

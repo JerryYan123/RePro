@@ -5,6 +5,8 @@
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=64
 #SBATCH --time=1-00:00:00
+#SBATCH --exclude=babel-s5-24
+#SBATCH --exclude=babel-s5-24
 #SBATCH --output=/home/jerryy2/repro_logs/repro-rl-0.6B-%j.out
 #SBATCH --error=/home/jerryy2/repro_logs/repro-rl-0.6B-%j.err
 
@@ -24,15 +26,16 @@ export TMPDIR=/scratch/${SLURM_JOB_ID}
 export VLLM_CACHE_ROOT=$TMPDIR/vllm
 export TRITON_CACHE_DIR=$TMPDIR/triton
 mkdir -p "$TMPDIR" "$VLLM_CACHE_ROOT" "$TRITON_CACHE_DIR"
-trap 'rm -rf "$TMPDIR"' EXIT
+cleanup() { kill $DATAMAN_PID $STRUCTURE_PID 2>/dev/null; rm -rf "$TMPDIR"; }
+trap cleanup EXIT
 cd ~/RePro/rl
 
-DATAMAN_PORT=8000
-STRUCTURE_PORT=8001
+DATAMAN_PORT=38000
+STRUCTURE_PORT=38001
 
 echo "[$(date)] Starting DataMan server on GPU 0..."
 CUDA_VISIBLE_DEVICES=0 python -m vllm.entrypoints.openai.api_server \
-    --model Qwen/Qwen3-4B --port $DATAMAN_PORT --max-model-len 2048 &
+    --model RuPeng/DataMan-1.5B-EN --port $DATAMAN_PORT --max-model-len 2048 &
 DATAMAN_PID=$!
 
 echo "[$(date)] Starting Structure server on GPU 1..."
@@ -55,6 +58,12 @@ for port in $DATAMAN_PORT $STRUCTURE_PORT; do
     done
 done
 
+export NCCL_P2P_DISABLE=1
+export NCCL_DEBUG=WARN
+export NCCL_TIMEOUT=600000
+
+export NCCL_P2P_DISABLE=1
+export NCCL_DEBUG=WARN
 echo "[$(date)] Starting GRPO training..."
 CUDA_VISIBLE_DEVICES=2,3,4,5,6,7 PYTHONPATH=$PWD/src ACCELERATE_LOG_LEVEL=info \
     accelerate launch --config_file recipes/accelerate_configs/zero2_6gpu.yaml \
@@ -62,4 +71,3 @@ CUDA_VISIBLE_DEVICES=2,3,4,5,6,7 PYTHONPATH=$PWD/src ACCELERATE_LOG_LEVEL=info \
     --config recipes/Qwen3/grpo/config_0.6B.yaml
 
 echo "[$(date)] Training complete!"
-kill $DATAMAN_PID $STRUCTURE_PID 2>/dev/null

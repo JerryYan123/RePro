@@ -128,7 +128,7 @@ class DataManInference:
         seed=1024,
         model_type="all_rating",
         use_server=False,
-        server_url="http://localhost:8000/v1",
+        server_url="http://localhost:38000/v1",
         api_key="EMPTY",
     ):
         """
